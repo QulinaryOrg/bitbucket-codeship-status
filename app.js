@@ -59,6 +59,7 @@ module.exports = function () {
 				json: pullRequest
 			}, function (err, response, body) {
 				if (err) {
+					console.error(err);
 					res.status(500).end();
 					return;
 				}
