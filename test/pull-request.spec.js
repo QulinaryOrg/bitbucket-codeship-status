@@ -4,7 +4,7 @@ var mockery = require('mockery');
 
 describe('Pull Request', function () {
 	var app, response, Request;
-	
+
 	before(function () {
 		mockery.enable({
 			warnOnReplace: false,
@@ -13,18 +13,18 @@ describe('Pull Request', function () {
 		mockery.registerMock('request', function (opt, callback) {
 			return Request(opt, callback);
 		});
-		
+
 		app = require('../app')();
 	});
-	
+
 	describe('when ENV setup', function () {
 		before(function () {
 			process.env.BITBUCKET_USERNAME = 'username';
 			process.env.BITBUCKET_PASSWORD = 'password';
 		});
-		
-		describe('and WRONG correct credentials', function () {
-			describe('and pull request data is valid, but description is empty', function () {
+
+		describe('and WRONG credentials', function () {
+			describe('and pull request data is valid', function () {
 				before(function (done) {
 					request(app)
 						.post('/pull-request/ee1399cc-b740-43da-812f-d17901f9efa7/52132')
@@ -36,15 +36,15 @@ describe('Pull Request', function () {
 						})
 					;
 				});
-				
+
 				it('should respond with access denied', function () {
 					expect(response.status).to.equal(401);
 					expect(response.body).to.be.empty;
 				});
 			});
 		});
-		
-		describe('and correct credentials', function () {
+
+		describe('and CORRECT credentials', function () {
 			describe('when pull request data posted to valid url', function () {
 				describe('and no pull request data', function () {
 					before(function (done) {
@@ -57,13 +57,13 @@ describe('Pull Request', function () {
 							})
 						;
 					});
-					
+
 					it('should respond with invalid request', function () {
 						expect(response.status).to.equal(400);
-						expect(response.body).to.be.empty;
+						expect(response.body).to.be.instanceof(Array);
 					});
 				});
-				
+
 				describe('and pull request data missing required information', function () {
 					before(function (done) {
 						request(app)
@@ -76,21 +76,21 @@ describe('Pull Request', function () {
 							})
 						;
 					});
-					
+
 					it('should respond with invalid request', function () {
 						expect(response.status).to.equal(400);
-						expect(response.body).to.be.empty;
+						expect(response.body).to.be.instanceof(Array);
 					});
 				});
-				
+
 				describe('and pull request data is valid, but description is empty', function () {
 					before(function (done) {
 						Request = function (opt, callback) {
 							callback(null, {statusCode: 201});
 						};
-						
+
 						var pullRequestCreated = require('./pull-request-created');
-						pullRequestCreated.pullrequest_created.description = '';
+						pullRequestCreated.pullrequest.description = '';
 						request(app)
 							.post('/pull-request/ee1399cc-b740-43da-812f-d17901f9efa7/52132')
 							.auth('username', 'password')
@@ -101,19 +101,19 @@ describe('Pull Request', function () {
 							})
 						;
 					});
-					
+
 					it('should respond with success', function () {
 						expect(response.status).to.equal(204);
 						expect(response.body).to.be.empty;
 					});
 				});
-				
+
 				describe('and pull request data is valid', function () {
 					before(function (done) {
 						Request = function (opt, callback) {
 							callback(null, {statusCode: 201});
 						};
-						
+
 						request(app)
 							.post('/pull-request/ee1399cc-b740-43da-812f-d17901f9efa7/52132')
 							.auth('username', 'password')
@@ -124,7 +124,7 @@ describe('Pull Request', function () {
 							})
 						;
 					});
-					
+
 					it('should respond with success', function () {
 						expect(response.status).to.equal(204);
 						expect(response.body).to.be.empty;
@@ -132,7 +132,7 @@ describe('Pull Request', function () {
 				});
 			});
 		});
-		
+
 		after(function () {
 			mockery.disable();
 			delete process.env.BITBUCKET_USERNAME;
